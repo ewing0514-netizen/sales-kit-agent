@@ -210,16 +210,75 @@
       <p class="text-center text-xs text-gray-400 mt-3">AI 生成通常需要 20–40 秒，請耐心等候</p>
 
     </form>
+
+    <!-- ── 成功狀態（生成完成後顯示）── -->
+    <div id="successSection" class="hidden mt-6">
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+          <svg class="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">Sales Kit 生成完成！</h3>
+        <p id="successDesc" class="text-gray-500 text-sm mb-6">您的 PowerPoint 已準備好，點擊下方按鈕下載。</p>
+        <!-- 下載按鈕 -->
+        <button id="downloadBtn"
+          class="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-bold px-8 py-3.5 rounded-xl transition shadow-lg shadow-blue-200 mb-4">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          下載 PowerPoint 檔案
+        </button>
+        <br/>
+        <button onclick="resetForm()"
+          class="text-sm text-gray-400 hover:text-blue-600 underline transition">
+          ← 重新生成另一份
+        </button>
+        <!-- 使用提示 -->
+        <div class="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-4 text-left text-xs text-blue-700">
+          <p class="font-semibold mb-1.5">📌 使用提示</p>
+          <ul class="space-y-1">
+            <li>• 以 Microsoft PowerPoint 或 Google Slides 開啟效果最佳</li>
+            <li>• 可自行替換圖片、調整字型與配色</li>
+            <li>• 簡報為 16:9 寬螢幕格式，共 8 頁</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 錯誤狀態 ── -->
+    <div id="errorSection" class="hidden mt-6">
+      <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-8 text-center">
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5">
+          <svg class="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">生成失敗</h3>
+        <p id="errorMsg" class="text-red-600 text-sm bg-red-50 rounded-xl px-4 py-3 mb-5 font-mono break-words"></p>
+        <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 text-left text-xs text-amber-700 mb-5">
+          <p class="font-semibold mb-1">💡 常見原因</p>
+          <ul class="space-y-1">
+            <li>• <strong>API Key 未設定</strong>：確認環境變數 ANTHROPIC_API_KEY</li>
+            <li>• <strong>網路逾時</strong>：Claude API 偶爾較慢，請重試</li>
+            <li>• <strong>Logo 格式問題</strong>：請改用 PNG 或 JPG</li>
+          </ul>
+        </div>
+        <button onclick="resetForm()"
+          class="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-bold px-8 py-3.5 rounded-xl transition">
+          ← 返回重試
+        </button>
+      </div>
+    </div>
+
   </main>
 
   <!-- ── 載入中遮罩 ── -->
-  <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center">
+  <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
     <div class="bg-white rounded-2xl p-10 max-w-sm w-full mx-4 text-center shadow-2xl">
-      <!-- 旋轉圓圈 -->
       <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-700 rounded-full spinner mx-auto mb-5"></div>
       <h3 class="text-xl font-bold text-gray-800 mb-2">AI 正在生成中</h3>
       <p id="loadingStep" class="text-sm text-gray-500 mb-5">呼叫 Claude API 分析您的資訊…</p>
-      <!-- 進度條 -->
       <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
         <div id="progressBar" class="h-full bg-blue-600 rounded-full progress-bar"></div>
       </div>
@@ -229,32 +288,27 @@
 
   <script>
     // ── Logo 上傳與預覽 ──
-    const logoInput    = document.getElementById('logoInput');
-    const uploadZone   = document.getElementById('uploadZone');
+    const logoInput     = document.getElementById('logoInput');
+    const uploadZone    = document.getElementById('uploadZone');
     const uploadDefault = document.getElementById('uploadDefault');
     const uploadPreview = document.getElementById('uploadPreview');
-    const previewImg   = document.getElementById('previewImg');
-    const previewName  = document.getElementById('previewName');
+    const previewImg    = document.getElementById('previewImg');
+    const previewName   = document.getElementById('previewName');
 
     logoInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file) showPreview(file);
+      if (e.target.files[0]) showPreview(e.target.files[0]);
     });
 
-    // 拖曳上傳
     uploadZone.addEventListener('dragover', e => {
       e.preventDefault();
       uploadZone.classList.add('dragging');
     });
-    uploadZone.addEventListener('dragleave', () => {
-      uploadZone.classList.remove('dragging');
-    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragging'));
     uploadZone.addEventListener('drop', e => {
       e.preventDefault();
       uploadZone.classList.remove('dragging');
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith('image/')) {
-        // 把檔案塞入 input
         const dt = new DataTransfer();
         dt.items.add(file);
         logoInput.files = dt.files;
@@ -283,11 +337,13 @@
       uploadPreview.classList.remove('flex');
     }
 
-    // ── 表單提交：顯示載入遮罩 ──
-    const mainForm      = document.getElementById('mainForm');
+    // ── AJAX 表單提交（Vercel Serverless 相容）──
+    const mainForm       = document.getElementById('mainForm');
     const loadingOverlay = document.getElementById('loadingOverlay');
-    const loadingStep   = document.getElementById('loadingStep');
-    const submitBtn     = document.getElementById('submitBtn');
+    const loadingStep    = document.getElementById('loadingStep');
+    const submitBtn      = document.getElementById('submitBtn');
+    const successSection = document.getElementById('successSection');
+    const errorSection   = document.getElementById('errorSection');
 
     const loadingMessages = [
       '呼叫 Claude AI 分析您的資訊…',
@@ -299,36 +355,99 @@
       '輸出 PowerPoint 檔案…',
     ];
 
-    mainForm.addEventListener('submit', function(e) {
-      // 基本驗證
+    // 用 fetch 攔截表單提交，接收二進位 Blob 後觸發瀏覽器下載
+    mainForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
       const company = mainForm.company_name.value.trim();
       const core    = mainForm.core_value.value.trim();
-      if (!company || !core) return; // 瀏覽器原生 required 會攔截
+      if (!company || !core) {
+        mainForm.company_name.reportValidity();
+        return;
+      }
 
       // 顯示載入遮罩
       loadingOverlay.classList.remove('hidden');
       loadingOverlay.classList.add('flex');
       submitBtn.disabled = true;
+      successSection.classList.add('hidden');
+      errorSection.classList.add('hidden');
 
       // 輪流顯示進度文字
-      let msgIndex = 0;
-      const msgInterval = setInterval(() => {
-        msgIndex = (msgIndex + 1) % loadingMessages.length;
-        loadingStep.textContent = loadingMessages[msgIndex];
-      }, 4000);
+      let msgIdx = 0;
+      const msgTimer = setInterval(() => {
+        loadingStep.textContent = loadingMessages[++msgIdx % loadingMessages.length];
+      }, 4500);
 
-      // 備保：45 秒後如果還沒跳轉，顯示提示
-      setTimeout(() => {
-        clearInterval(msgInterval);
-        loadingStep.textContent = '仍在處理中，請繼續等候…';
-      }, 45000);
+      let blobUrl = null;
+      let downloadName = 'saleskit.pptx';
+
+      try {
+        const resp = await fetch('/generate', {
+          method: 'POST',
+          body: new FormData(mainForm),
+        });
+
+        clearInterval(msgTimer);
+
+        if (resp.ok) {
+          // 成功：取得 PPTX Blob
+          const blob = await resp.blob();
+          blobUrl = URL.createObjectURL(blob);
+
+          // 從 Content-Disposition 取出檔名
+          const cd = resp.headers.get('Content-Disposition') || '';
+          const m = cd.match(/filename[^;=\n]*=(["']?)([^"'\n;]+)\1/);
+          if (m) downloadName = m[2];
+
+          // 自動觸發下載
+          triggerDownload(blobUrl, downloadName);
+
+          // 顯示成功區塊
+          document.getElementById('successDesc').textContent =
+            `「${company}」的 Sales Kit 已生成，檔案名稱：${downloadName}`;
+          document.getElementById('downloadBtn').onclick = () => triggerDownload(blobUrl, downloadName);
+          successSection.classList.remove('hidden');
+          successSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        } else {
+          // 伺服器回傳錯誤 JSON
+          const data = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+          showError(data.error || '未知錯誤，請再試一次');
+        }
+
+      } catch (err) {
+        clearInterval(msgTimer);
+        showError(`網路錯誤：${err.message}`);
+      } finally {
+        loadingOverlay.classList.add('hidden');
+        loadingOverlay.classList.remove('flex');
+        submitBtn.disabled = false;
+      }
     });
 
-    // ── Kit 類型切換：自動套用選取樣式 ──
-    document.querySelectorAll('.kit-card input').forEach(radio => {
-      // 初始化：設定預設選取
-      if (radio.checked) radio.dispatchEvent(new Event('change'));
-    });
+    function triggerDownload(url, name) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function showError(msg) {
+      document.getElementById('errorMsg').textContent = msg;
+      errorSection.classList.remove('hidden');
+      errorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function resetForm() {
+      successSection.classList.add('hidden');
+      errorSection.classList.add('hidden');
+      mainForm.reset();
+      clearLogo({ stopPropagation: () => {} });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   </script>
 </body>
 </html>
