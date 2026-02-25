@@ -39,7 +39,7 @@ SH = 7.5    # slide height
 def get_kit_display_name(kit_type: str) -> str:
     """將 kit_type 代碼轉換為中文顯示名稱"""
     mapping = {
-        'bni':     'BNI 商業引薦社｜會員招募',
+        'bni':     'BNI 主題簡報｜LCD 333 架構',
         'product': '產品與服務銷售提案',
         'brand':   '品牌合作提案',
         'event':   '活動推廣 Sales Kit',
@@ -61,14 +61,18 @@ def build_prompt(form_data: dict) -> str:
     # 各類型對應的投影片結構
     structures = {
         'bni': [
-            'cover    → 封面（BNI + 公司名稱）',
-            'intro    → 什麼是 BNI？',
-            'problem  → 入會的機會與挑戰',
-            'solution → BNI 的核心系統',
-            'features → 加入的三大核心好處',
-            'stats    → 數據見證',
-            'steps    → 如何加入（三步驟）',
-            'cta      → 立即行動',
+            # ── 介紹 3頁（自我介紹）──
+            'cover    → 封面｜開場（姓名、公司、產業別）',
+            'intro    → 我在做什麼？（產品/服務/年資/專業背景）',
+            'intro    → 為什麼做這事業？（初衷故事、使命感、改變點）',
+            # ── 概要 3頁（成功案例）──
+            'case     → 成功案例 1（客戶問題 → 解決方案 → 具體成果）',
+            'case     → 成功案例 2（客戶問題 → 解決方案 → 具體成果）',
+            'case     → 成功案例 3（客戶問題 → 解決方案 → 具體成果）',
+            # ── 內容 3頁（如何滿足需求）──
+            'steps    → 希望引薦的客戶（一般引薦、理想引薦、夢幻引薦）',
+            'intro    → 總結｜最重要的一件事（核心訴求精華）',
+            'cta      → Slogan｜記憶點口號與聯絡資訊',
         ],
         'product': [
             'cover    → 封面（公司 + 產品名稱）',
@@ -102,23 +106,38 @@ def build_prompt(form_data: dict) -> str:
         ],
     }
 
+    slide_count = len(structures.get(kit_type, structures['product']))
     slide_list = '\n'.join(
         [f'  {i+1}. {s}' for i, s in enumerate(structures.get(kit_type, structures['product']))]
     )
 
+    # BNI 專屬附加說明
+    bni_extra = ''
+    if kit_type == 'bni':
+        bni_extra = """
+【BNI LCD 333 架構說明】
+這是 BNI 標準主題簡報架構，分三大區塊：
+- 介紹（3頁）：讓成員認識你是誰、做什麼、為何而做
+- 概要（3頁）：用3個真實成功案例展示你的能力
+- 內容（3頁）：說明理想引薦對象、總結核心訊息、留下記憶點
+
+成功案例重點：要具體、有數字、說出客戶的轉變（before → after）
+希望引薦投影片：明確說出一般/理想/夢幻三種引薦對象
+"""
+
     return f"""你是台灣頂尖的商業簡報文案專家，擅長撰寫具說服力的銷售提案。
 
-請根據以下客戶資料，為「{display_name}」生成一份 PowerPoint Sales Kit 的完整文案。
-
+請根據以下客戶資料，為「{display_name}」生成一份 PowerPoint 簡報的完整文案。
+{bni_extra}
 【客戶資訊】
-- 公司／品牌名稱：{company_name}
+- 姓名／公司／品牌：{company_name}
 - 核心訴求：{core_value}
 - 目標受眾：{target}
 - 數據亮點：{data_hl}
 - 聯絡資訊：{contact}
 - 補充說明：{extra}
 
-【需要生成的投影片（共 8 頁）】
+【需要生成的投影片（共 {slide_count} 頁）】
 {slide_list}
 
 【JSON 輸出格式說明】
@@ -130,27 +149,30 @@ cover 類型：
 intro / problem / solution 類型：
   {{"type":"intro","title":"標題","content":"50字以內的引言說明","points":["要點1（20字內）","要點2","要點3"]}}
 
+case 類型（成功案例，BNI 專用）：
+  {{"type":"case","title":"成功案例 X｜客戶類型描述","client":"客戶背景一行描述","problem":"客戶原本面臨的問題或痛點（40字內）","solution":"你提供的解決方案（40字內）","result":"具體成果或數字化結果（40字內）"}}
+
 features 類型（固定 3 個 items）：
   {{"type":"features","title":"標題","items":[{{"title":"特色名稱","description":"30字說明"}},{{"title":"...","description":"..."}},{{"title":"...","description":"..."}}]}}
 
 stats 類型（固定 3 個 items）：
   {{"type":"stats","title":"標題","items":[{{"number":"數字/比率","label":"指標名稱","description":"補充說明"}},{{"number":"...","label":"...","description":"..."}},{{"number":"...","label":"...","description":"..."}}]}}
 
-steps 類型（固定 3 個 items）：
-  {{"type":"steps","title":"標題","items":[{{"step":"01","title":"步驟標題","description":"說明文字"}},{{"step":"02","title":"...","description":"..."}},{{"step":"03","title":"...","description":"..."}}]}}
+steps 類型（BNI 用於希望引薦）：
+  {{"type":"steps","title":"標題","items":[{{"step":"一般","title":"一般引薦對象","description":"具體描述此類客戶特徵"}},{{"step":"理想","title":"理想引薦對象","description":"具體描述此類客戶特徵"}},{{"step":"夢幻","title":"夢幻引薦對象","description":"具體描述理想中最完美的客戶"}}]}}
 
 cta 類型：
-  {{"type":"cta","title":"行動呼籲主標","subtitle":"激勵副文案","contact":"{contact}"}}
+  {{"type":"cta","title":"簡短有力的 Slogan（10字內）","subtitle":"一句話說明你能帶來的價值","contact":"{contact}"}}
 
 【重要規則】
 1. 全程繁體中文
-2. 文案要專業有說服力，符合台灣商業文化
-3. 從客戶資料中萃取數據，若無則合理推算
+2. 文案真實、具體、有說服力，符合台灣商業文化
+3. 成功案例必須有 before/after 的轉變感，有具體數字更好
 4. 每個要點控制在 20 字以內
 5. 直接輸出 JSON，不要有任何說明文字
 
 輸出：
-{{"slides": [ ...8 個物件... ]}}"""
+{{"slides": [ ...{slide_count} 個物件... ]}}"""
 
 
 def call_claude(form_data: dict) -> dict:
@@ -462,6 +484,53 @@ def slide_steps(prs, data: dict):
     rect(s, 0, SH - 0.1, SW, 0.1, C_ACCENT)
 
 
+def slide_case(prs, data: dict):
+    """成功案例投影片（BNI 333架構）：3欄式 問題｜解決方案｜成果"""
+    s = blank_slide(prs)
+    set_bg(s, C_LIGHT_BG)
+
+    # 頂部深藍標題列
+    rect(s, 0, 0, SW, 1.3, C_PRIMARY)
+    rect(s, SW - 1.5, 0, 1.5, 1.3, C_ACCENT)
+    txt(s, data.get('title', '成功案例'), 0.6, 0.22, 11.5, 0.9,
+        size=24, bold=True, color=C_WHITE)
+
+    # 客戶背景標籤
+    client = data.get('client', '')
+    if client:
+        txt(s, f'客戶背景：{client}', 0.5, 1.32, SW - 1.0, 0.42,
+            size=12, italic=True, color=C_GRAY_TEXT)
+
+    # 三欄顏色定義
+    col_data = [
+        ('問題／挑戰',  data.get('problem', ''),  RGBColor(0xC0, 0x39, 0x2B), RGBColor(0xFF, 0xF0, 0xEE)),
+        ('解決方案',    data.get('solution', ''), C_ACCENT,                   RGBColor(0xEE, 0xF4, 0xFF)),
+        ('成果數據',    data.get('result', ''),   RGBColor(0x16, 0xA3, 0x4A), RGBColor(0xEE, 0xFB, 0xF3)),
+    ]
+
+    cw = 3.9
+    cy = 1.82
+    ch = 5.3
+
+    for i, (label, content, header_color, bg_color) in enumerate(col_data):
+        cx = 0.37 + i * (cw + 0.37)
+
+        # 欄位底框（淡色）
+        rect(s, cx, cy, cw, ch, bg_color)
+        # 欄位頂部彩色標題列
+        rect(s, cx, cy, cw, 0.65, header_color)
+
+        # 欄位標題
+        txt(s, label, cx + 0.15, cy + 0.1, cw - 0.3, 0.5,
+            size=15, bold=True, color=C_WHITE, align=PP_ALIGN.CENTER)
+
+        # 欄位內容
+        txt(s, content, cx + 0.2, cy + 0.82, cw - 0.4, ch - 1.1,
+            size=15, color=C_DARK_TEXT)
+
+    rect(s, 0, SH - 0.1, SW, 0.1, C_ACCENT)
+
+
 def slide_cta(prs, data: dict, logo_path):
     """行動呼籲投影片：深藍背景 + 白色文字 + 聯絡資訊"""
     s = blank_slide(prs)
@@ -507,6 +576,7 @@ def build_slide(prs, slide_data: dict, logo_path):
     elif t == 'features': slide_features(prs, slide_data)
     elif t == 'stats':    slide_stats(prs, slide_data)
     elif t == 'steps':    slide_steps(prs, slide_data)
+    elif t == 'case':     slide_case(prs, slide_data)       # BNI 成功案例
     elif t == 'cta':      slide_cta(prs, slide_data, logo_path)
     else:                 slide_content(prs, slide_data)  # intro / problem / solution
 
