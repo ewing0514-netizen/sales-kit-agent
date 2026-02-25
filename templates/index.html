@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Kit AI Agent｜自動生成專業簡報</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 自訂漸層背景 */
+    .hero-bg {
+      background: linear-gradient(135deg, #0f2050 0%, #1b3a6b 40%, #1e4db7 100%);
+    }
+    /* 卡片選取樣式 */
+    .kit-card input:checked + label {
+      border-color: #2d6be8;
+      background-color: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(45,107,232,0.25);
+    }
+    .kit-card input:checked + label .card-icon {
+      background-color: #1b3a6b;
+      color: white;
+    }
+    /* 上傳區拖曳樣式 */
+    .upload-zone.dragging {
+      border-color: #2d6be8;
+      background-color: #eff6ff;
+    }
+    /* 載入動畫 */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 1s linear infinite; }
+    /* 進度列動畫 */
+    @keyframes progress { 0%{width:5%} 90%{width:88%} 100%{width:100%} }
+    .progress-bar { animation: progress 30s ease forwards; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- ── 頁首 ── -->
+  <header class="hero-bg text-white">
+    <div class="max-w-5xl mx-auto px-6 py-12 text-center">
+      <div class="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm mb-6">
+        <span class="text-yellow-300">✦</span>
+        <span>AI 驅動 · 一鍵生成 · 立即下載</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+        Sales Kit <span class="text-blue-300">AI Agent</span>
+      </h1>
+      <p class="text-lg text-blue-100 max-w-xl mx-auto">
+        填寫表單，AI 自動生成專業 PowerPoint Sales Kit，<br class="hidden md:block"/>
+        涵蓋封面、問題、解決方案、數據、行動呼籲等 8 頁。
+      </p>
+    </div>
+  </header>
+
+  <!-- ── 主表單 ── -->
+  <main class="max-w-3xl mx-auto px-4 py-10">
+    <form id="mainForm" action="/generate" method="POST" enctype="multipart/form-data">
+
+      <!-- ── STEP 1: 選擇類型 ── -->
+      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-7 mb-6">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="bg-blue-700 text-white text-sm font-bold rounded-full w-7 h-7 flex items-center justify-center">1</span>
+          <h2 class="text-lg font-semibold text-gray-800">選擇 Sales Kit 類型</h2>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="kitTypeGrid">
+          <!-- BNI -->
+          <div class="kit-card">
+            <input type="radio" name="kit_type" id="kit_bni" value="bni" class="sr-only" />
+            <label for="kit_bni" class="block border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-400 text-center">
+              <div class="card-icon w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-2xl mx-auto mb-3 transition-all">🤝</div>
+              <p class="text-sm font-semibold text-gray-700">BNI 會員招募</p>
+              <p class="text-xs text-gray-400 mt-1">引薦社</p>
+            </label>
+          </div>
+          <!-- 產品/服務 -->
+          <div class="kit-card">
+            <input type="radio" name="kit_type" id="kit_product" value="product" class="sr-only" checked />
+            <label for="kit_product" class="block border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-400 text-center">
+              <div class="card-icon w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-2xl mx-auto mb-3 transition-all">🚀</div>
+              <p class="text-sm font-semibold text-gray-700">產品／服務</p>
+              <p class="text-xs text-gray-400 mt-1">銷售提案</p>
+            </label>
+          </div>
+          <!-- 品牌提案 -->
+          <div class="kit-card">
+            <input type="radio" name="kit_type" id="kit_brand" value="brand" class="sr-only" />
+            <label for="kit_brand" class="block border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-400 text-center">
+              <div class="card-icon w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-2xl mx-auto mb-3 transition-all">✨</div>
+              <p class="text-sm font-semibold text-gray-700">品牌提案</p>
+              <p class="text-xs text-gray-400 mt-1">合作邀請</p>
+            </label>
+          </div>
+          <!-- 活動推廣 -->
+          <div class="kit-card">
+            <input type="radio" name="kit_type" id="kit_event" value="event" class="sr-only" />
+            <label for="kit_event" class="block border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-400 text-center">
+              <div class="card-icon w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-2xl mx-auto mb-3 transition-all">🎯</div>
+              <p class="text-sm font-semibold text-gray-700">活動推廣</p>
+              <p class="text-xs text-gray-400 mt-1">招募報名</p>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── STEP 2: 填寫資訊 ── -->
+      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-7 mb-6">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="bg-blue-700 text-white text-sm font-bold rounded-full w-7 h-7 flex items-center justify-center">2</span>
+          <h2 class="text-lg font-semibold text-gray-800">填寫基本資訊</h2>
+        </div>
+
+        <div class="space-y-5">
+          <!-- 公司名稱 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              公司／品牌名稱 <span class="text-red-500">*</span>
+            </label>
+            <input type="text" name="company_name" required
+              placeholder="例：AURA 品牌顧問、BNI 信義章節"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+          </div>
+
+          <!-- 核心訴求 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              核心訴求／主要價值主張 <span class="text-red-500">*</span>
+            </label>
+            <textarea name="core_value" required rows="3"
+              placeholder="例：幫助中小企業透過系統化引薦，在 12 個月內業績成長 30%"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"></textarea>
+          </div>
+
+          <!-- 目標受眾 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              目標受眾
+            </label>
+            <input type="text" name="target_audience"
+              placeholder="例：台北市 30–50 歲中小企業主、新創公司創辦人"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+          </div>
+
+          <!-- 數據亮點 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              數據亮點
+              <span class="text-gray-400 text-xs ml-1">（任何可量化的成果或規模）</span>
+            </label>
+            <input type="text" name="data_highlights"
+              placeholder="例：服務超過 200 個企業、客戶滿意度 96%、年均業績成長 40%"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+          </div>
+
+          <!-- 聯絡資訊 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              聯絡資訊
+            </label>
+            <input type="text" name="contact_info"
+              placeholder="例：contact@example.com｜0912-345-678｜@Instagram"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+          </div>
+
+          <!-- 補充說明 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+              補充說明
+              <span class="text-gray-400 text-xs ml-1">（任何想讓 AI 特別強調的內容）</span>
+            </label>
+            <textarea name="extra_info" rows="2"
+              placeholder="例：我們是 BNI 台灣最大章節之一；強調限時優惠；重點放在 ROI 回報"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── STEP 3: 上傳 Logo ── -->
+      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-7 mb-8">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="bg-blue-700 text-white text-sm font-bold rounded-full w-7 h-7 flex items-center justify-center">3</span>
+          <h2 class="text-lg font-semibold text-gray-800">上傳 Logo <span class="text-gray-400 text-sm font-normal">（選填）</span></h2>
+        </div>
+
+        <!-- 上傳區 -->
+        <div id="uploadZone"
+          class="upload-zone border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition"
+          onclick="document.getElementById('logoInput').click()">
+          <div id="uploadDefault">
+            <div class="text-4xl mb-3">🖼️</div>
+            <p class="text-sm text-gray-600 mb-1">點擊或拖曳圖片到此上傳</p>
+            <p class="text-xs text-gray-400">支援 PNG、JPG、WebP，建議尺寸 400×300px 以上</p>
+          </div>
+          <div id="uploadPreview" class="hidden flex-col items-center gap-3">
+            <img id="previewImg" src="" alt="preview" class="max-h-32 max-w-xs rounded-lg object-contain" />
+            <p id="previewName" class="text-sm text-gray-500"></p>
+            <button type="button" onclick="clearLogo(event)"
+              class="text-xs text-red-500 hover:text-red-700 underline">移除圖片</button>
+          </div>
+        </div>
+        <input type="file" id="logoInput" name="logo" accept="image/*" class="sr-only" />
+      </section>
+
+      <!-- ── 提交按鈕 ── -->
+      <button type="submit" id="submitBtn"
+        class="w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-bold text-lg py-4 rounded-2xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-3">
+        <span id="btnIcon">⚡</span>
+        <span id="btnText">一鍵生成 Sales Kit</span>
+      </button>
+      <p class="text-center text-xs text-gray-400 mt-3">AI 生成通常需要 20–40 秒，請耐心等候</p>
+
+    </form>
+  </main>
+
+  <!-- ── 載入中遮罩 ── -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center">
+    <div class="bg-white rounded-2xl p-10 max-w-sm w-full mx-4 text-center shadow-2xl">
+      <!-- 旋轉圓圈 -->
+      <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-700 rounded-full spinner mx-auto mb-5"></div>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">AI 正在生成中</h3>
+      <p id="loadingStep" class="text-sm text-gray-500 mb-5">呼叫 Claude API 分析您的資訊…</p>
+      <!-- 進度條 -->
+      <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div id="progressBar" class="h-full bg-blue-600 rounded-full progress-bar"></div>
+      </div>
+      <p class="text-xs text-gray-400 mt-3">預計 20–40 秒完成</p>
+    </div>
+  </div>
+
+  <script>
+    // ── Logo 上傳與預覽 ──
+    const logoInput    = document.getElementById('logoInput');
+    const uploadZone   = document.getElementById('uploadZone');
+    const uploadDefault = document.getElementById('uploadDefault');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const previewImg   = document.getElementById('previewImg');
+    const previewName  = document.getElementById('previewName');
+
+    logoInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) showPreview(file);
+    });
+
+    // 拖曳上傳
+    uploadZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadZone.classList.add('dragging');
+    });
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragging');
+    });
+    uploadZone.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragging');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        // 把檔案塞入 input
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        logoInput.files = dt.files;
+        showPreview(file);
+      }
+    });
+
+    function showPreview(file) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        previewImg.src = ev.target.result;
+        previewName.textContent = file.name;
+        uploadDefault.classList.add('hidden');
+        uploadPreview.classList.remove('hidden');
+        uploadPreview.classList.add('flex');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearLogo(e) {
+      e.stopPropagation();
+      logoInput.value = '';
+      previewImg.src = '';
+      uploadDefault.classList.remove('hidden');
+      uploadPreview.classList.add('hidden');
+      uploadPreview.classList.remove('flex');
+    }
+
+    // ── 表單提交：顯示載入遮罩 ──
+    const mainForm      = document.getElementById('mainForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingStep   = document.getElementById('loadingStep');
+    const submitBtn     = document.getElementById('submitBtn');
+
+    const loadingMessages = [
+      '呼叫 Claude AI 分析您的資訊…',
+      '撰寫封面與品牌訴求文案…',
+      '生成問題頁與解決方案…',
+      '組裝特色、數據、步驟頁面…',
+      '建立行動呼籲頁面…',
+      '套用商務配色與版型…',
+      '輸出 PowerPoint 檔案…',
+    ];
+
+    mainForm.addEventListener('submit', function(e) {
+      // 基本驗證
+      const company = mainForm.company_name.value.trim();
+      const core    = mainForm.core_value.value.trim();
+      if (!company || !core) return; // 瀏覽器原生 required 會攔截
+
+      // 顯示載入遮罩
+      loadingOverlay.classList.remove('hidden');
+      loadingOverlay.classList.add('flex');
+      submitBtn.disabled = true;
+
+      // 輪流顯示進度文字
+      let msgIndex = 0;
+      const msgInterval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % loadingMessages.length;
+        loadingStep.textContent = loadingMessages[msgIndex];
+      }, 4000);
+
+      // 備保：45 秒後如果還沒跳轉，顯示提示
+      setTimeout(() => {
+        clearInterval(msgInterval);
+        loadingStep.textContent = '仍在處理中，請繼續等候…';
+      }, 45000);
+    });
+
+    // ── Kit 類型切換：自動套用選取樣式 ──
+    document.querySelectorAll('.kit-card input').forEach(radio => {
+      // 初始化：設定預設選取
+      if (radio.checked) radio.dispatchEvent(new Event('change'));
+    });
+  </script>
+</body>
+</html>

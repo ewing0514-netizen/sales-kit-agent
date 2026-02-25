@@ -1,0 +1,16 @@
+# 環境變數（含 API 金鑰，絕對不能上傳）
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 使用者上傳與生成的暫存檔
+static/uploads/*
+output/*
+!static/uploads/.gitkeep
+!output/.gitkeep
